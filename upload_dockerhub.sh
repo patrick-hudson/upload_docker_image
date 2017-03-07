@@ -142,7 +142,7 @@ if [ -z "$PASS"]; then
     echo "creds"
     CREDS=$(cat ~/.docker/config.json | grep "https://index.docker.io/v1/")
     echo "creds $CREDS"
-    if [[ $CREDS == ""]]; then
+    if [[ $CREDS == "" ]]; then
       printf "${G}Docker Config, but credentials not provided! You will be prompted for your DockerHub login${N}\n"
       docker login
     else
