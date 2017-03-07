@@ -151,6 +151,7 @@ while [ "$1" != "" ]; do
             ;;
         -f | --first-run)
             firstrun
+            shift
             ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
