@@ -7,8 +7,9 @@
 #author          :Patrick Hudson
 #date            :20170307
 #version         :0.1
-#usage           :./upload_ecr.sh -u accountid -i imagename -t tag -r us-east-1
+#usage           :./upload_ecr.sh -i imagename -t tag
 #notes           :Make sure you set the AWS_ACCOUNT_ID variable
+#bash_version    :4.1.5(1)-release
 #==============================================================================
 G='\033[0;32m' # Green
 N='\033[0m' # No Color
@@ -17,6 +18,13 @@ if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
 fi
+###########################
+# AWS_ACCOUNT_ID VARIABLE IS REQUIRED
+# To obtain your AWS_ACCOUNT_ID login to your AWS console and select Account settings
+# Or go here: https://console.aws.amazon.com/billing/home?#/account
+###########################
+AWS_ACCOUNT_ID=""
+
 function usage()
 {
   cat <<EOF
@@ -27,13 +35,13 @@ function usage()
 ----------------------------------------------------------------
 REQUIRED
 ----------------------------------------------------------------
-  -u| --account-id     AWS Account ID - Found in Account settings in AWS Console
+  -u| --user           DockerHub Username
   -i| --image          Name of your image to upload
   -t| --tag            Image Tag (Maximum of 1 tag per image)
 ----------------------------------------------------------------
 Optional
 ----------------------------------------------------------------
-  -r| --region         AWS Region to upload to (Default: us-east-1) 
+  -p| --password       DockerHub Password
 EOF
 }
 
@@ -45,18 +53,6 @@ while [ "$1" != "" ]; do
             usage
             exit
             ;;
-        -a | --access-key)
-            ACCESSKEY=$VALUE
-            shift
-            ;;
-        -s | --secret-key)
-            SECRETKEY=$VALUE
-            shift
-            ;;
-        -r | --region)
-            REGION=$VALUE
-            shift
-            ;;
         -i | --image-name)
             IMAGE=$VALUE
             shift
@@ -65,8 +61,12 @@ while [ "$1" != "" ]; do
             TAG=$VALUE
             shift
             ;;
-        -u | --account-id)
-            AWSID=$VALUE
+        -u | --user)
+            USER=$VALUE
+            shift
+            ;;
+        -p | --password)
+            PASS=$VALUE
             shift
             ;;
         *)
@@ -77,12 +77,8 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
-if [ -z $AWSID ]; then
-  printf "${R}ERROR: AWS Account ID not found. Run ./upload_ecr.sh -h for more info${N}\n"
-  exit
-fi
-if [ -z "$IMAGE" ] || [ -z "$TAG" ]; then
-  printf "${R}ERROR: You must define an image name, and tag. Use ./upload_ecr.sh -h for more info${N}\n"
+if [ -z "$IMAGE" ] || [ -z "$TAG" ] || [ -z "$USER" ]; then
+  printf "${R}ERROR: You must define an image name, tag, and DockerHub Username. Use ./upload_dockerhub.sh -h for more info${N}\n"
   exit
 fi
 OS="undetermined"
@@ -128,7 +124,7 @@ else
   OSPKGMAN="apt-get install -y"
 fi
 #Install Python
-printf "${G}Installing python packages and AWSCLI${N}\n"
+printf "${G}Installing Docker${N}\n"
 if [[ $OS == "ubuntu" ]]; then
   eval $OSPKGMAN docker.io >/dev/null 2>&1
 elif [[ $OS == "centos6" ]]; then
@@ -137,16 +133,17 @@ else
   eval $OSPKGMAN docker >/dev/null 2>&1
 fi
 service docker start
-eval $OSPKGMAN python-pip >/dev/null 2>&1
-pip install --upgrade awscli >/dev/null 2>&1
-if [[ -z "$REGION" ]]; then
-  REGION="us-east-1"
+if [ -z "$PASS"]; then
+  if [ ! -f ~/.docker/config.json ]; then
+    printf "${G}Docker Config not found and credentials not provided! You will be prompted for your DockerHub login${N}\n"
+    docker login
+  else
+    CREDS=$(cat ~/.docker/config.json | grep "https://index.docker.io/v1/")
+    if [ -z "$CREDS"]; then
+      printf "${G}Docker Config, but credentials not provided! You will be prompted for your DockerHub login${N}\n"
+      docker login
+    fi
+  fi
 fi
-if [ ! -f ~/.aws/credentials ]; then
-  printf "${G}AWS Credentials not Found! You will be prompted for your AWS Access Key ID and Secret Access Key${N}\n"
-  aws configure
-fi
-eval $(aws ecr get-login --region "$REGION")
-docker build -t $IMAGE:$TAG .
-docker tag $IMAGE:$TAG $AWSID.dkr.ecr.$REGION.amazonaws.com/$IMAGE:$TAG
-docker push $AWSID.dkr.ecr.$REGION.amazonaws.com/$IMAGE:$TAG
+docker build -t $USER/$IMAGE:$TAG .
+docker push $USER/$IMAGE:$TAG
