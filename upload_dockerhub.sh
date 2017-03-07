@@ -145,11 +145,11 @@ if [ -z "$PASS" ]; then
     if [[ $CREDS == "" ]]; then
       printf "${G}Docker Config, but credentials not provided! You will be prompted for your DockerHub login${N}\n"
       docker login
-    else
-      echo "params"
-      docker login -u $USER -p $PASS
     fi
   fi
+else
+  echo "params"
+  docker login -u $USER -p $PASS
 fi
 docker build -t $USER/$IMAGE:$TAG .
 docker push $USER/$IMAGE:$TAG
