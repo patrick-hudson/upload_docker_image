@@ -139,6 +139,8 @@ fi
 printf "${G}Installing python packages and AWSCLI${N}\n"
 if [[ $OS == "ubuntu" ]]; then
   eval $OSPKGMAN docker.io >/dev/null 2>&1
+elif [[ $OS == "centos6" ]]; then
+  eval $OSPKGMAN docker-io --enablerepo epel >/dev/null 2>&1
 else
   eval $OSPKGMAN docker >/dev/null 2>&1
 fi
