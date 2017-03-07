@@ -101,7 +101,7 @@ if [ -f /etc/centos-release ]; then
     printf "${G}Installing EPEL if not already installed${N}\n"
     yum install -y yum-utils >/dev/null 2>&1
     rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm >/dev/null 2>&1
-  elif [[ $(awk '{print $3}' /etc/centos-release | cut -d . -f 1) -eq 7 ]]; then
+  elif [[ $(awk '{print $4}' /etc/centos-release | cut -d . -f 1) -eq 7 ]]; then
     OS="centos7"
     printf "${G}CentOS 7 detected${N}\n"
     printf "${G}Installing EPEL if not already installed${N}\n"
@@ -117,7 +117,13 @@ elif [ -f /etc/redhat-release ]; then
 elif [ -f /etc/os-release ]; then
   VERSION=$(awk -F= '/^ID=/{print $2}' /etc/os-release)
   if [[ $VERSION == "ubuntu" ]]; then
-    OS="ubuntu"
+    UVERSION=$(awk -F= '/^VERSION_ID=/{print $2}' /etc/os-release | sed 's/"//g' | cut -d . -f 1)
+    if [[ $UVERSION == "14" ]] || [[ $UVERSION == "16" ]]; then
+      OS="ubuntu"
+    else
+      printf "${R}ERROR: Only Ubuntu 14 and Ubuntu 16 is supported.${N}\n"
+      exit
+    fi
   fi
 else
   echo "OS Seems to be unsupported. Script works with RedHat Enterprise Linux 6 and 7, CentOS 6 and 7, and Ubuntu"
@@ -131,7 +137,12 @@ else
 fi
 #Install Python
 printf "${G}Installing python packages and AWSCLI${N}\n"
-eval $OSPKGMAN docker >/dev/null 2>&1
+if [[ $OS == "ubuntu" ]]; then
+  eval $OSPKGMAN docker.io >/dev/null 2>&1
+else
+  eval $OSPKGMAN docker >/dev/null 2>&1
+fi
+service docker start
 eval $OSPKGMAN python-pip >/dev/null 2>&1
 pip install --upgrade awscli >/dev/null 2>&1
 if [[ -z "$REGION" ]]; then
@@ -142,6 +153,6 @@ if [ ! -f ~/.aws/credentials ]; then
   aws configure
 fi
 eval $(aws ecr get-login --region "$REGION")
-echo "docker build -t $IMAGE:$TAG ."
-#docker tag $IMAGE:$TAG $AWSID.dkr.ecr.$REGION.amazonaws.com/$IMAGE:$TAG
-#docker push $AWSID.dkr.ecr.$REGION.amazonaws.com/$IMAGE:$TAG
+docker build -t $IMAGE:$TAG .
+docker tag $IMAGE:$TAG $AWSID.dkr.ecr.$REGION.amazonaws.com/$IMAGE:$TAG
+docker push $AWSID.dkr.ecr.$REGION.amazonaws.com/$IMAGE:$TAG
