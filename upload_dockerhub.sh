@@ -139,7 +139,7 @@ if [ -z "$PASS"]; then
     docker login
   else
     CREDS=$(cat ~/.docker/config.json | grep "https://index.docker.io/v1/")
-    if [ -z "$CREDS"]; then
+    if [ -z "$CREDS" ]; then
       printf "${G}Docker Config, but credentials not provided! You will be prompted for your DockerHub login${N}\n"
       docker login
     else
