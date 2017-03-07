@@ -133,7 +133,7 @@ else
   eval $OSPKGMAN docker >/dev/null 2>&1
 fi
 service docker start
-if [ -z "$PASS"]; then
+if [ -z "$PASS" ]; then
   if [ ! -f ~/.docker/config.json ]; then
     echo "no config"
     printf "${G}Docker Config not found and credentials not provided! You will be prompted for your DockerHub login${N}\n"
