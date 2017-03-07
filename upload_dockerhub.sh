@@ -46,41 +46,6 @@ Optional
 EOF
 }
 
-while [ "$1" != "" ]; do
-    PARAM=`echo $1 | awk -F= '{print $1}'`
-    VALUE=`echo $2 | awk -F= '{print $1}'`
-    case $PARAM in
-        -h | --help)
-            usage
-            exit
-            ;;
-        -i | --image-name)
-            IMAGE=$VALUE
-            shift
-            ;;
-        -t | --tag)
-            TAG=$VALUE
-            shift
-            ;;
-        -u | --user)
-            USER=$VALUE
-            shift
-            ;;
-        -p | --password)
-            PASS=$VALUE
-            shift
-            ;;
-        -f | --first-run)
-            firstrun
-            ;;
-        *)
-            echo "ERROR: unknown parameter \"$PARAM\""
-            usage
-            exit 1
-            ;;
-    esac
-    shift
-done
 if [ -z "$IMAGE" ] || [ -z "$TAG" ] || [ -z "$USER" ]; then
   printf "${R}ERROR: You must define an image name, tag, and DockerHub Username. Use ./upload_dockerhub.sh -h for more info${N}\n"
   exit
@@ -161,4 +126,39 @@ function uploadImage(){
   docker build -t $USER/$IMAGE:$TAG .
   docker push $USER/$IMAGE:$TAG  
 }
+while [ "$1" != "" ]; do
+    PARAM=`echo $1 | awk -F= '{print $1}'`
+    VALUE=`echo $2 | awk -F= '{print $1}'`
+    case $PARAM in
+        -h | --help)
+            usage
+            exit
+            ;;
+        -i | --image-name)
+            IMAGE=$VALUE
+            shift
+            ;;
+        -t | --tag)
+            TAG=$VALUE
+            shift
+            ;;
+        -u | --user)
+            USER=$VALUE
+            shift
+            ;;
+        -p | --password)
+            PASS=$VALUE
+            shift
+            ;;
+        -f | --first-run)
+            firstrun
+            ;;
+        *)
+            echo "ERROR: unknown parameter \"$PARAM\""
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
 uploadImage
