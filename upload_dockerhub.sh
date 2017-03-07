@@ -106,20 +106,16 @@ function uploadImage(){
   PASS=$4
   if [ -z "$PASS" ]; then
     if [ ! -f ~/.docker/config.json ]; then
-      echo "no config"
       printf "${G}Docker Config not found and credentials not provided! You will be prompted for your DockerHub login${N}\n"
       docker login
     else
-      echo "creds"
       CREDS=$(cat ~/.docker/config.json | grep "https://index.docker.io/v1/")
-      echo "creds $CREDS"
       if [[ $CREDS == "" ]]; then
-        printf "${G}Docker Config, but credentials not provided! You will be prompted for your DockerHub login${N}\n"
+        printf "${G}Docker Config found, but credentials not provided! You will be prompted for your DockerHub login${N}\n"
         docker login
       fi
     fi
   else
-    echo "params"
     docker login -u $USER -p $PASS
   fi
   docker build -t $USER/$IMAGE:$TAG .
