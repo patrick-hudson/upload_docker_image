@@ -161,4 +161,4 @@ function uploadImage(){
   docker build -t $USER/$IMAGE:$TAG .
   docker push $USER/$IMAGE:$TAG  
 }
-uploadImage()
+uploadImage
