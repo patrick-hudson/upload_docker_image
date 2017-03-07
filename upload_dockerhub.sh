@@ -45,11 +45,6 @@ Optional
   -f| --first-run      Specify this flag if this is the first run of the script (Installs dependencies like Docker)
 EOF
 }
-
-if [ -z "$IMAGE" ] || [ -z "$TAG" ] || [ -z "$USER" ]; then
-  printf "${R}ERROR: You must define an image name, tag, and DockerHub Username. Use ./upload_dockerhub.sh -h for more info${N}\n"
-  exit
-fi
 function firstrun(){
   OS="undetermined"
   if [ -f /etc/centos-release ]; then
@@ -105,6 +100,10 @@ function firstrun(){
   service docker start
 }
 function uploadImage(){
+  IMAGE=$1
+  TAG=$2
+  USER=$3
+  PASS=$4
   if [ -z "$PASS" ]; then
     if [ ! -f ~/.docker/config.json ]; then
       echo "no config"
@@ -161,4 +160,9 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
-uploadImage
+if [ -z "$IMAGE" ] || [ -z "$TAG" ] || [ -z "$USER" ]; then
+  printf "${R}ERROR: You must define an image name, tag, and DockerHub Username. Use ./upload_dockerhub.sh -h for more info${N}\n"
+  exit
+else
+  uploadImage $IMAGE $TAG $USER $PASS
+fi
